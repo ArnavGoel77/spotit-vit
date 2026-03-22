@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Found Item - SpotIt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">SpotIt</div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="report-lost.html">Report Lost</a>
+            <a href="report-found.html" class="active">Report Found</a>
+            <a href="listings.html">View All Items</a>
+        </div>
+        <div class="nav-user">
+            <span id="userName"></span>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+
+            <h2 class="form-title">✅ Report a Found Item</h2>
+            <p class="form-subtitle">Found something on campus? Post it here so the owner can contact you. You're doing a good thing!</p>
+
+            <div id="successMsg" class="success-msg" style="display: none;">
+                ✅ Item reported! The owner will be able to contact you. <a href="listings.html">View all listings</a>
+            </div>
+
+            <div class="form-group">
+                <label>Item Name *</label>
+                <input type="text" id="itemTitle" placeholder="e.g. Black Wallet, Samsung Charger, Blue Water Bottle" />
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="itemCategory">
+                        <option value="">-- Select category --</option>
+                        <option>Electronics</option>
+                        <option>ID Card / Documents</option>
+                        <option>Keys</option>
+                        <option>Books / Notes</option>
+                        <option>Wallet / Purse</option>
+                        <option>Clothing</option>
+                        <option>Water Bottle</option>
+                        <option>Bag / Backpack</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Found At Location *</label>
+                    <select id="itemLocationSelect" onchange="handleLocationSelect()">
+                        <option value="">-- Select location --</option>
+                        <option>Main Building (MB)</option>
+                        <option>Technology Tower (TT)</option>
+                        <option>GDN Block</option>
+                        <option>SJT Block</option>
+                        <option>PRP Block</option>
+                        <option>Anna Auditorium</option>
+                        <option>Library</option>
+                        <option>Hostel - Men's</option>
+                        <option>Hostel - Women's</option>
+                        <option value="custom">Other...</option>
+                    </select>
+                    <input type="text" id="itemLocationCustom" placeholder="e.g. Room 305, TT Block" style="display:none; margin-top: 8px;" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Date Found *</label>
+                <input type="date" id="itemDate" />
+            </div>
+
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea id="itemDesc" rows="4" placeholder="Describe what you found - color, brand, condition, anything notable. The more detail the better so the right person can claim it."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Your Contact Number *</label>
+                <input type="text" id="itemContact" placeholder="Phone number or alternate email" />
+            </div>
+
+            <div class="form-group">
+                <label>Where is the item now? *</label>
+                <input type="text" id="itemCurrentLocation" placeholder="e.g. I have it with me, Submitted to security desk, Room 305 TT block..." />
+            </div>
+
+            <div class="form-group">
+                <label>Verification Questions <span style="font-weight:400; color: var(--text-light);">(Optional but recommended)</span></label>
+                <p style="font-size: 13px; color: var(--text-light); margin-bottom: 12px;">
+                    Add questions only the real owner would know. They'll need to answer these correctly before seeing your contact details.
+                </p>
+                <div id="questionsContainer"></div>
+                <button type="button" onclick="addQuestion()" class="add-question-btn">+ Add a Question</button>
+            </div>
+
+            <button onclick="submitForm()" class="submit-btn">Submit Found Item Report</button>
+
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script>
+
+        function handleLocationSelect() {
+            const select = document.getElementById("itemLocationSelect");
+            const customInput = document.getElementById("itemLocationCustom");
+            if (select.value === "custom") {
+                customInput.style.display = "block";
+                customInput.focus();
+            } else {
+                customInput.style.display = "none";
+                customInput.value = "";
+            }
+        }
+
+        let questionCount = 0;
+
+        function addQuestion() {
+            questionCount++;
+            const container = document.getElementById("questionsContainer");
+            const qDiv = document.createElement("div");
+            qDiv.className = "question-block";
+            qDiv.id = "question-" + questionCount;
+            qDiv.innerHTML = `
+                <div class="question-row">
+                    <div style="flex:1">
+                        <input type="text" class="q-question" placeholder="Question  e.g. What color was the bag?" />
+                        <input type="text" class="q-answer" placeholder="Expected answer  e.g. Dark green" style="margin-top: 8px;" />
+                    </div>
+                    <button type="button" onclick="removeQuestion(${questionCount})" class="remove-q-btn">✕</button>
+                </div>
+            `;
+            container.appendChild(qDiv);
+        }
+
+        function removeQuestion(id) {
+            const el = document.getElementById("question-" + id);
+            if (el) el.remove();
+        }
+
+        function getQuestions() {
+            const blocks = document.querySelectorAll(".question-block");
+            const questions = [];
+            blocks.forEach(block => {
+                const q = block.querySelector(".q-question").value.trim();
+                const a = block.querySelector(".q-answer").value.trim();
+                if (q && a) questions.push({ question: q, answer: a.toLowerCase() });
+            });
+            return questions;
+        }
+
+        function submitForm() {
+            const title           = document.getElementById("itemTitle").value.trim();
+            const category        = document.getElementById("itemCategory").value;
+            const date            = document.getElementById("itemDate").value;
+            const desc            = document.getElementById("itemDesc").value.trim();
+            const contact         = document.getElementById("itemContact").value.trim();
+            const currentLocation = document.getElementById("itemCurrentLocation").value.trim();
+
+            const locationSelect = document.getElementById("itemLocationSelect").value;
+            const locationCustom = document.getElementById("itemLocationCustom").value.trim();
+            const location = locationSelect === "custom" ? locationCustom : locationSelect;
+
+            if (!title || !category || !date || !desc || !contact || !currentLocation) {
+                alert("Please fill in all the required fields!");
+                return;
+            }
+            if (!location) {
+                alert("Please select or type a location!");
+                return;
+            }
+
+            const questions = getQuestions();
+            const user = JSON.parse(sessionStorage.getItem("vitUser"));
+
+            const newItem = {
+                id: generateId(),
+                type: "found",
+                title: title,
+                category: category,
+                location: location,
+                date: date,
+                description: desc,
+                contact: contact,
+                currentLocation: currentLocation,
+                questions: questions,
+                postedBy: user.email,
+                postedByName: user.name,
+                status: "open",
+                timestamp: Date.now()
+            };
+
+            saveItem(newItem);
+
+            document.getElementById("successMsg").style.display = "block";
+            document.getElementById("itemTitle").value = "";
+            document.getElementById("itemCategory").value = "";
+            document.getElementById("itemLocationSelect").value = "";
+            document.getElementById("itemLocationCustom").value = "";
+            document.getElementById("itemLocationCustom").style.display = "none";
+            document.getElementById("itemDate").value = "";
+            document.getElementById("itemDesc").value = "";
+            document.getElementById("itemContact").value = "";
+            document.getElementById("itemCurrentLocation").value = "";
+            document.getElementById("questionsContainer").innerHTML = "";
+            questionCount = 0;
+            window.scrollTo(0, 0);
+        }
+
+    </script>
+
+</body>
+</html>

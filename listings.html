@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Items - SpotIt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">SpotIt</div>
+        <div class="nav-links">
+            <a href="home.html">Home</a>
+            <a href="report-lost.html">Report Lost</a>
+            <a href="report-found.html">Report Found</a>
+            <a href="listings.html" class="active">View All Items</a>
+        </div>
+        <div class="nav-user">
+            <span id="userName"></span>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="welcome-section">
+            <h2>All Listings</h2>
+            <p>Browse all lost and found items posted by VIT students.</p>
+        </div>
+
+        <div class="filter-bar">
+            <div class="form-group">
+                <label>Search</label>
+                <input type="text" id="searchInput" placeholder="Search by item name..." oninput="applyFilters()" />
+            </div>
+            <div class="form-group">
+                <label>Type</label>
+                <select id="filterType" onchange="applyFilters()">
+                    <option value="">All</option>
+                    <option value="lost">Lost</option>
+                    <option value="found">Found</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="filterCategory" onchange="applyFilters()">
+                    <option value="">All Categories</option>
+                    <option>Electronics</option>
+                    <option>ID Card / Documents</option>
+                    <option>Keys</option>
+                    <option>Books / Notes</option>
+                    <option>Wallet / Purse</option>
+                    <option>Clothing</option>
+                    <option>Water Bottle</option>
+                    <option>Bag / Backpack</option>
+                    <option>Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="filterStatus" onchange="applyFilters()">
+                    <option value="">All</option>
+                    <option value="open">Open</option>
+                    <option value="resolved">Resolved</option>
+                </select>
+            </div>
+            <button onclick="clearFilters()" class="filter-btn secondary">Clear</button>
+        </div>
+
+        <p id="resultsInfo" class="results-info"></p>
+        <div id="itemsGrid" class="items-grid"></div>
+
+    </div>
+
+    <div id="claimModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🔐 Verify Your Identity</h3>
+                <button onclick="closeModal()" class="modal-close">✕</button>
+            </div>
+            <p class="modal-desc">Answer the questions below to prove this is your item. Answers are not case sensitive.</p>
+
+            <div id="modalQuestions"></div>
+
+            <div id="claimError" class="claim-error" style="display:none;">❌ Some answers are incorrect. Please try again.</div>
+            <div id="claimSuccess" class="claim-success" style="display:none;"></div>
+
+            <div id="claimActions">
+                <button onclick="submitClaim()" class="submit-btn" style="margin-top: 16px;">Submit Answers</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script>
+
+        const currentUser = JSON.parse(sessionStorage.getItem("vitUser"));
+        let activeItem = null;
+
+        function renderItems(items) {
+            const grid = document.getElementById("itemsGrid");
+            document.getElementById("resultsInfo").textContent = items.length + " item(s) found";
+
+            if (items.length === 0) {
+                grid.innerHTML = '<p class="no-items">No items match your search. Try different filters.</p>';
+                return;
+            }
+
+            grid.innerHTML = "";
+
+            items.forEach(item => {
+                const isOwner = currentUser && currentUser.email === item.postedBy;
+                const desc = item.description.length > 90
+                    ? item.description.substring(0, 90) + "..."
+                    : item.description;
+
+                let actionArea = "";
+                if (item.type === "found" && !isOwner && item.status === "open") {
+                    if (item.questions && item.questions.length > 0) {
+                        actionArea = `<button onclick="openClaim('${item.id}')" class="claim-btn">🔐 Claim this item</button>`;
+                    } else {
+                        actionArea = `<div class="contact-info">📞 Contact: ${item.contact}</div>
+                                      <div class="contact-info">📦 Item is at: ${item.currentLocation}</div>`;
+                    }
+                } else if (item.type === "found" && isOwner) {
+                    actionArea = `<div class="contact-info">📞 Your contact: ${item.contact}</div>
+                                  <div class="contact-info">📦 Item is at: ${item.currentLocation}</div>`;
+                } else if (item.type === "lost" && item.status === "open") {
+                    actionArea = `<div class="contact-info">📞 Contact: ${item.contact}</div>`;
+                }
+
+                const resolveBtn = isOwner && item.status === "open"
+                    ? `<button onclick="markResolved('${item.id}')" class="resolve-btn">✅ Mark as Resolved</button>`
+                    : "";
+
+                grid.innerHTML += `
+                    <div class="item-card" id="card-${item.id}">
+                        <div class="card-top ${item.type}">
+                            <span class="type-badge">${item.type === "lost" ? "🔍 LOST" : "✅ FOUND"}</span>
+                            <span class="status-badge ${item.status}">${item.status.toUpperCase()}</span>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="card-title">${item.title}</h4>
+                            <p class="card-desc">${desc}</p>
+                            <div class="card-meta">
+                                <span>📍 ${item.location}</span>
+                                <span>📅 ${formatDate(item.date)}</span>
+                            </div>
+                            <div class="card-footer">
+                                <span class="cat-tag">${item.category}</span>
+                                <span class="posted-by">by ${item.postedByName.split(" ")[0]}</span>
+                            </div>
+                            ${actionArea}
+                            ${resolveBtn}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function applyFilters() {
+            const search   = document.getElementById("searchInput").value.toLowerCase();
+            const type     = document.getElementById("filterType").value;
+            const category = document.getElementById("filterCategory").value;
+            const status   = document.getElementById("filterStatus").value;
+
+            let items = getAllItems().reverse();
+            if (search)   items = items.filter(i => i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search));
+            if (type)     items = items.filter(i => i.type === type);
+            if (category) items = items.filter(i => i.category === category);
+            if (status)   items = items.filter(i => i.status === status);
+
+            renderItems(items);
+        }
+
+        function clearFilters() {
+            document.getElementById("searchInput").value = "";
+            document.getElementById("filterType").value = "";
+            document.getElementById("filterCategory").value = "";
+            document.getElementById("filterStatus").value = "";
+            applyFilters();
+        }
+
+        function markResolved(itemId) {
+            if (!confirm("Mark this item as resolved?")) return;
+            updateItemStatus(itemId, "resolved");
+            applyFilters();
+        }
+
+
+        function openClaim(itemId) {
+            const items = getAllItems();
+            activeItem = items.find(i => i.id === itemId);
+            if (!activeItem) return;
+
+            const qContainer = document.getElementById("modalQuestions");
+            qContainer.innerHTML = "";
+            document.getElementById("claimError").style.display = "none";
+            document.getElementById("claimSuccess").style.display = "none";
+            document.getElementById("claimActions").style.display = "block";
+
+            activeItem.questions.forEach((q, idx) => {
+                qContainer.innerHTML += `
+                    <div class="modal-question">
+                        <label>Q${idx + 1}: ${q.question}</label>
+                        <input type="text" id="claim-ans-${idx}" placeholder="Your answer..." />
+                    </div>
+                `;
+            });
+
+            document.getElementById("claimModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("claimModal").style.display = "none";
+            activeItem = null;
+        }
+
+        function submitClaim() {
+            if (!activeItem) return;
+
+            let allCorrect = true;
+
+            activeItem.questions.forEach((q, idx) => {
+                const userAnswer = document.getElementById("claim-ans-" + idx).value.trim().toLowerCase();
+                if (userAnswer !== q.answer) {
+                    allCorrect = false;
+                }
+            });
+
+            if (!allCorrect) {
+                document.getElementById("claimError").style.display = "block";
+                document.getElementById("claimSuccess").style.display = "none";
+                return;
+            }
+
+            document.getElementById("claimError").style.display = "none";
+            document.getElementById("claimActions").style.display = "none";
+            document.getElementById("claimSuccess").style.display = "block";
+            document.getElementById("claimSuccess").innerHTML = `
+                ✅ Verified! Here are the contact details:<br><br>
+                <strong>📞 Contact:</strong> ${activeItem.contact}<br>
+                <strong>📦 Item is at:</strong> ${activeItem.currentLocation}<br>
+                <strong>👤 Posted by:</strong> ${activeItem.postedByName}
+            `;
+        }
+
+        document.getElementById("claimModal").addEventListener("click", function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        applyFilters();
+
+    </script>
+
+</body>
+</html>

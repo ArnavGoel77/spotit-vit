@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - SpotIt</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-brand">SpotIt</div>
+        <div class="nav-links">
+            <a href="home.html" class="active">Home</a>
+            <a href="report-lost.html">Report Lost</a>
+            <a href="report-found.html">Report Found</a>
+            <a href="listings.html">View All Items</a>
+        </div>
+        <div class="nav-user">
+            <span id="userName"></span>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <div class="welcome-section">
+            <h2 id="welcomeMsg">Welcome! 👋</h2>
+            <p>Lost something? Found something? Report it here and help your fellow VITians.</p>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card lost">
+                <h3 id="lostCount">0</h3>
+                <p>Items Reported Lost</p>
+            </div>
+            <div class="stat-card found">
+                <h3 id="foundCount">0</h3>
+                <p>Items Reported Found</p>
+            </div>
+            <div class="stat-card resolved">
+                <h3 id="resolvedCount">0</h3>
+                <p>Items Resolved</p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 14px; margin-bottom: 36px; flex-wrap: wrap;">
+            <a href="report-lost.html" style="flex:1; min-width: 180px;">
+                <button style="width:100%; padding: 14px; background:#e74c3c; color:white; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit;">
+                    🔍 I Lost Something
+                </button>
+            </a>
+            <a href="report-found.html" style="flex:1; min-width: 180px;">
+                <button style="width:100%; padding: 14px; background:#27ae60; color:white; border:none; border-radius:10px; font-size:15px; font-weight:600; cursor:pointer; font-family:inherit;">
+                    ✅ I Found Something
+                </button>
+            </a>
+        </div>
+
+        <div class="section-title">
+            <h3>Recent Listings</h3>
+            <a href="listings.html">View All →</a>
+        </div>
+
+        <div id="recentItems" class="items-grid">
+
+        </div>
+
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+    <script>
+
+        const user = JSON.parse(sessionStorage.getItem("vitUser"));
+        if (user) {
+            const firstName = user.name.split(" ")[0];
+            document.getElementById("welcomeMsg").textContent = "Welcome back, " + firstName + "! 👋";
+        }
+
+        const allItems = getAllItems();
+        document.getElementById("lostCount").textContent = allItems.filter(i => i.type === "lost").length;
+        document.getElementById("foundCount").textContent = allItems.filter(i => i.type === "found").length;
+        document.getElementById("resolvedCount").textContent = allItems.filter(i => i.status === "resolved").length;
+
+        const recent = [...allItems].reverse().slice(0, 6);
+        const grid = document.getElementById("recentItems");
+
+        if (recent.length === 0) {
+            grid.innerHTML = '<p class="no-items">No items posted yet. Be the first one!</p>';
+        } else {
+            recent.forEach(item => {
+                grid.innerHTML += buildItemCard(item);
+            });
+        }
+
+    </script>
+
+</body>
+</html>

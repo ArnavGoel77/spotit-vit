@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpotIt - Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="login-page">
+
+    <div class="login-container">
+        <div class="login-box">
+
+            <div class="vit-logo-area">
+                <h1 class="vit-title">VIT</h1>
+                <p class="vit-subtitle">Vellore Institute of Technology</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <h2 class="site-name">SpotIt</h2>
+            <p class="login-desc">Sign in with your VIT Google account to continue</p>
+
+            <button id="googleLoginBtn" class="google-btn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20">
+                Sign in with Google
+            </button>
+
+            <div id="errorMsg" class="error-msg" style="display: none;"></div>
+
+            <p class="note">* Only @vitstudent.ac.in and @vit.ac.in emails are allowed</p>
+
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="auth.js"></script>
+
+</body>
+</html>
