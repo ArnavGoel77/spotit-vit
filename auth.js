@@ -14,7 +14,6 @@ document.getElementById("googleLoginBtn").addEventListener("click", function () 
             const user = result.user;
 
             if (isVITemail(user.email)) {
-                // store basic user info so other pages can use it
                 sessionStorage.setItem("vitUser", JSON.stringify({
                     name: user.displayName,
                     email: user.email,
@@ -22,13 +21,11 @@ document.getElementById("googleLoginBtn").addEventListener("click", function () 
                 }));
                 window.location.href = "home.html";
             } else {
-                // not a vit email, kick them out
                 auth.signOut();
                 showError("Access denied! Only @vitstudent.ac.in and @vit.ac.in emails are allowed.");
             }
         })
         .catch((error) => {
-            // popup closed or something went wrong
             if (error.code !== "auth/popup-closed-by-user") {
                 showError("Login failed. Please try again.");
             }
