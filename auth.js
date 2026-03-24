@@ -9,35 +9,35 @@ function isVITemail(email) {
 }
 
 document.getElementById("googleLoginBtn").addEventListener("click", function () {
-    // auth.signInWithPopup(provider)
-    //     .then((result) => {
-    //         const user = result.user;
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            const user = result.user;
 
-    //         if (isVITemail(user.email)) {
-    //             sessionStorage.setItem("vitUser", JSON.stringify({
-    //                 name: user.displayName,
-    //                 email: user.email,
-    //                 photo: user.photoURL
-    //             }));
-    //             window.location.href = "home.html";
-    //         } else {
-    //             auth.signOut();
-    //             showError("Access denied! Only @vitstudent.ac.in and @vit.ac.in emails are allowed.");
-    //         }
-    //     })
-        // .catch((error) => {
-        //     if (error.code !== "auth/popup-closed-by-user") {
-        //         showError("Login failed. Please try again.");
-        //     }
-        //     console.error(error);
-        // });
+            if (isVITemail(user.email)) {
+                sessionStorage.setItem("vitUser", JSON.stringify({
+                    name: user.displayName,
+                    email: user.email,
+                    photo: user.photoURL
+                }));
+                window.location.href = "home.html";
+            } else {
+                auth.signOut();
+                showError("Access denied! Only @vitstudent.ac.in and @vit.ac.in emails are allowed.");
+            }
+        })
+        .catch((error) => {
+            if (error.code !== "auth/popup-closed-by-user") {
+                showError("Login failed. Please try again.");
+            }
+            console.error(error);
+        });
 
-    sessionStorage.setItem("vitUser", JSON.stringify({
-        name: "Arnav Goel",
-        email: "test@vitstudent.ac.in",
-        photo: ""
-    }));
-    window.location.href = "home.html";
+    // sessionStorage.setItem("vitUser", JSON.stringify({
+    //     name: "Arnav Goel",
+    //     email: "test@vitstudent.ac.in",
+    //     photo: ""
+    // }));
+    // window.location.href = "home.html";
 });
 
 function showError(msg) {
