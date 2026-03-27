@@ -55,15 +55,17 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                 <h3 style="font-size:18px; font-weight:600;">All Listings</h3>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <select id="adminFilterType" onchange="renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                    <input type="text" id="adminSearchItem" placeholder="Search items or emails..." oninput="currentPage=1; renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                    <select id="adminFilterType" onchange="currentPage=1; renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
                         <option value="">All Types</option>
                         <option value="lost">Lost</option>
                         <option value="found">Found</option>
                     </select>
-                    <select id="adminFilterStatus" onchange="renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                    <select id="adminFilterStatus" onchange="currentPage=1; renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
                         <option value="">All Status</option>
                         <option value="open">Open</option>
                         <option value="resolved">Resolved</option>
+                        <option value="expired">Expired</option>
                     </select>
                 </div>
             </div>
@@ -93,7 +95,10 @@
         </div>
 
         <div id="tab-users" class="admin-section">
-            <h3 style="font-size:18px; font-weight:600; margin-bottom:16px;">Registered Users</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                <h3 style="font-size:18px; font-weight:600;">Registered Users</h3>
+                <input type="text" id="adminSearchUser" placeholder="Search name or email..." oninput="renderUsers()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+            </div>
             <table class="admin-table">
                 <thead>
                     <tr>
@@ -149,10 +154,18 @@
         async function renderListings() {
             const filterType   = document.getElementById("adminFilterType").value;
             const filterStatus = document.getElementById("adminFilterStatus").value;
+            const searchQuery  = document.getElementById("adminSearchItem") ? document.getElementById("adminSearchItem").value.toLowerCase() : "";
 
             let items = await getAllItems();
             items = items.reverse();
 
+            if (searchQuery) {
+                items = items.filter(i => 
+                    i.title.toLowerCase().includes(searchQuery) || 
+                    i.description.toLowerCase().includes(searchQuery) ||
+                    i.postedBy.toLowerCase().includes(searchQuery)
+                );
+            }
             if (filterType)   items = items.filter(i => i.type === filterType);
             if (filterStatus) items = items.filter(i => i.status === filterStatus);
 
@@ -226,6 +239,7 @@
         async function renderUsers() {
             const items = await getAllItems();
             const bannedUsers = await getBannedUsers();
+            const searchQuery = document.getElementById("adminSearchUser") ? document.getElementById("adminSearchUser").value.toLowerCase() : "";
             const usersMap = {};
             
             items.forEach(item => {
@@ -236,11 +250,19 @@
                 if (item.status === "resolved") usersMap[item.postedBy].totalResolved++;
             });
 
-            const users = Object.values(usersMap);
+            let users = Object.values(usersMap);
+
+            if (searchQuery) {
+                users = users.filter(u => 
+                    u.name.toLowerCase().includes(searchQuery) || 
+                    u.email.toLowerCase().includes(searchQuery)
+                );
+            }
+
             const tbody = document.getElementById("usersTableBody");
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No users have posted anything yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No users found.</td></tr>';
                 return;
             }
 
