@@ -1,11 +1,9 @@
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// only vit emails should be allowed
 const allowedDomains = ["vitstudent.ac.in", "vit.ac.in"];
 
-// admin email - this account gets full control
-const ADMIN_EMAIL = "goelarnav06@gmail.com";
+const ADMIN_EMAIL = ["goelarnav06@gmail.com","mehergandhok@gmail.com","athishraj04@gmail.com"];
 
 function isVITemail(email) {
     const domain = email.split("@")[1];
@@ -13,7 +11,7 @@ function isVITemail(email) {
 }
 
 function isAdmin(email) {
-    return email === ADMIN_EMAIL;
+    return ADMIN_EMAILS.includes(email);
 }
 
 document.getElementById("googleLoginBtn").addEventListener("click", function () {
