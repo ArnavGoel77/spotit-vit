@@ -1,3 +1,7 @@
+/* =====================
+   SpotIt - CSS
+   ===================== */
+
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 * {
@@ -32,6 +36,7 @@ a {
     color: var(--vit-light-blue);
 }
 
+/* ---- LOGIN PAGE ---- */
 
 body.login-page {
     background: linear-gradient(135deg, #003580 0%, #1a5cb5 50%, #003580 100%);
@@ -130,6 +135,7 @@ body.login-page {
     color: var(--text-light);
 }
 
+/* ---- NAVBAR ---- */
 
 .navbar {
     background: var(--vit-blue);
@@ -197,6 +203,7 @@ body.login-page {
     background: rgba(255,255,255,0.25);
 }
 
+/* ---- GENERAL CONTAINER ---- */
 
 .container {
     max-width: 1100px;
@@ -204,6 +211,7 @@ body.login-page {
     padding: 32px 24px;
 }
 
+/* ---- HOME PAGE ---- */
 
 .welcome-section {
     margin-bottom: 28px;
@@ -274,6 +282,7 @@ body.login-page {
     font-size: 15px;
 }
 
+/* ---- ITEM CARDS ---- */
 
 .items-grid {
     display: grid;
@@ -382,6 +391,7 @@ body.login-page {
     color: var(--vit-blue);
 }
 
+/* ---- FORMS ---- */
 
 .form-container {
     max-width: 680px;
@@ -482,6 +492,7 @@ body.login-page {
     margin-bottom: 20px;
 }
 
+/* ---- LISTINGS PAGE ---- */
 
 .filter-bar {
     background: var(--white);
@@ -550,6 +561,7 @@ body.login-page {
     margin-bottom: 16px;
 }
 
+/* ---- VERIFICATION QUESTIONS (report-found form) ---- */
 
 .add-question-btn {
     margin-top: 8px;
@@ -612,6 +624,7 @@ body.login-page {
     flex-shrink: 0;
 }
 
+/* ---- CLAIM BUTTON ---- */
 
 .claim-btn {
     margin-top: 10px;
@@ -646,6 +659,7 @@ body.login-page {
     font-weight: 600;
 }
 
+/* ---- CLAIM MODAL ---- */
 
 .modal-overlay {
     position: fixed;
@@ -742,6 +756,142 @@ body.login-page {
     margin-top: 12px;
 }
 
+/* ---- ADMIN DASHBOARD ---- */
+
+.admin-badge {
+    background: var(--vit-gold);
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+}
+
+.admin-tab {
+    padding: 10px 20px;
+    border: 2px solid var(--border);
+    background: var(--white);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    transition: all 0.2s;
+}
+
+.admin-tab:hover {
+    border-color: var(--vit-light-blue);
+    color: var(--vit-blue);
+}
+
+.admin-tab.active {
+    background: var(--vit-blue);
+    border-color: var(--vit-blue);
+    color: white;
+}
+
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.admin-table {
+    width: 100%;
+    background: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    background: var(--vit-blue);
+    color: white;
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.admin-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text);
+    vertical-align: middle;
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table tr:hover td {
+    background: #f8f9ff;
+}
+
+.admin-table .no-data {
+    text-align: center;
+    color: var(--text-light);
+    padding: 40px;
+}
+
+.delete-btn {
+    background: #fdecea;
+    color: var(--lost-color);
+    border: 1px solid #f5c6cb;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.delete-btn:hover {
+    background: var(--lost-color);
+    color: white;
+}
+
+.admin-resolve-btn {
+    background: #e8f8ee;
+    color: var(--found-color);
+    border: 1px solid #a8dbb4;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Poppins', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 6px;
+    transition: all 0.2s;
+}
+
+.admin-resolve-btn:hover {
+    background: var(--found-color);
+    color: white;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+/* ---- RESPONSIVE ---- */
 @media (max-width: 768px) {
     .navbar {
         padding: 0 16px;
