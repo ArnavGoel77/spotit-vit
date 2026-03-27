@@ -31,9 +31,9 @@
         </div>
 
         <div class="filter-bar">
-            <div class="form-group">
-                <label>Search</label>
-                <input type="text" id="searchInput" placeholder="Search by item name..." oninput="applyFilters()" />
+            <div class="form-group" style="flex: 2; min-width: 250px;">
+                <label>Search Items</label>
+                <input type="text" id="searchInput" placeholder="Search by name, color, location, or details..." oninput="applyFilters()" />
             </div>
             <div class="form-group">
                 <label>Type</label>
@@ -173,7 +173,15 @@
             }
             
             let items = [...allFetchedItems].reverse();
-            if (search)   items = items.filter(i => i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search));
+            
+            if (search) {
+                items = items.filter(i => 
+                    i.title.toLowerCase().includes(search) || 
+                    i.description.toLowerCase().includes(search) ||
+                    i.location.toLowerCase().includes(search)
+                );
+            }
+            
             if (type)     items = items.filter(i => i.type === type);
             if (category) items = items.filter(i => i.category === category);
             if (status)   items = items.filter(i => i.status === status);

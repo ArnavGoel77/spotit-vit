@@ -3,14 +3,14 @@ function checkAuth() {
     const currentPage = window.location.pathname;
 
     if (!user) {
-        // Stop infinite loop: Only redirect if the user is NOT already on the login page
+        
         if (!currentPage.includes("index.html") && currentPage !== "/") {
             window.location.href = "index.html";
         }
         return null;
     }
 
-    // Optional bonus: If they ARE logged in and try to go to the login page, push them to the dashboard
+    
     if (currentPage.includes("index.html") || currentPage === "/") {
         const parsedUser = JSON.parse(user);
         window.location.href = parsedUser.isAdmin ? "admin.html" : "home.html";
