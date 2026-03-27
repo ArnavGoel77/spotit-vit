@@ -3,30 +3,682 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpotIt – Digital Lost & Found</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="login-page">
+    <title>SpotIt – Lost & Found, VIT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+        }
 
-    <div class="login-container">
-        <div class="login-box">
-            
-            <div class="brand-header">
-                <span class="uni-badge">VIT Vellore</span>
-                <h1 class="site-title">SpotIt</h1>
-                <p class="login-subtitle">Digital Lost & Found</p>
+        :root {
+            --blue: #003580;
+            --blue-mid: #1a5cb5;
+            --blue-light: #e8eef8;
+            --blue-glow: rgba(0, 53, 128, 0.08);
+            --gold: #f5a623;
+            --bg: #f0f4fb;
+            --white: #ffffff;
+            --text: #0f172a;
+            --text-mid: #334155;
+            --text-light: #64748b;
+            --border: #dde6f5;
+        }
+
+        html, body {
+            height: 100%;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ---- background ---- */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        /* subtle geometric shapes in background */
+        .bg-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+        }
+
+        .bg-shape-1 {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(0,53,128,0.07) 0%, transparent 70%);
+            top: -100px; left: -100px;
+            animation: drift 20s ease-in-out infinite;
+        }
+
+        .bg-shape-2 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, rgba(245,166,35,0.07) 0%, transparent 70%);
+            bottom: -80px; right: -80px;
+            animation: drift 16s ease-in-out infinite reverse;
+        }
+
+        .bg-shape-3 {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(26,92,181,0.06) 0%, transparent 70%);
+            top: 40%; right: 15%;
+            animation: drift 24s ease-in-out infinite;
+            animation-delay: -8s;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0); }
+            33%  { transform: translate(20px, -30px); }
+            66%  { transform: translate(-15px, 15px); }
+        }
+
+        /* dot grid pattern */
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(0,53,128,0.08) 1px, transparent 1px);
+            background-size: 28px 28px;
+        }
+
+        /* decorative lines */
+        .bg-lines {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .bg-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(0,53,128,0.06), transparent);
+            height: 1px;
+            width: 100%;
+            animation: sweep 12s ease-in-out infinite;
+        }
+
+        .bg-line:nth-child(1) { top: 20%; animation-delay: 0s; }
+        .bg-line:nth-child(2) { top: 50%; animation-delay: -4s; }
+        .bg-line:nth-child(3) { top: 80%; animation-delay: -8s; }
+
+        @keyframes sweep {
+            0%, 100% { opacity: 0; transform: scaleX(0.3); }
+            50% { opacity: 1; transform: scaleX(1); }
+        }
+
+        /* ---- split layout ---- */
+        .page {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        /* ---- LEFT PANEL ---- */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 64px;
+            animation: slide-in-left 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes slide-in-left {
+            from { opacity: 0; transform: translateX(-30px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        .vit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            color: var(--blue-mid);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            padding: 8px 16px;
+            border-radius: 100px;
+            margin-bottom: 36px;
+            box-shadow: 0 2px 8px rgba(0,53,128,0.06);
+            width: fit-content;
+            animation: fade-up 0.5s 0.2s both;
+        }
+
+        .vit-badge-dot {
+            width: 7px; height: 7px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.7); opacity: 0.6; }
+        }
+
+        .logo {
+            font-family: 'DM Serif Display', serif;
+            font-size: 72px;
+            line-height: 1;
+            letter-spacing: -3px;
+            color: var(--blue);
+            margin-bottom: 16px;
+            animation: fade-up 0.5s 0.3s both;
+        }
+
+        .logo-tagline {
+            font-size: 18px;
+            color: var(--text-mid);
+            font-weight: 400;
+            line-height: 1.5;
+            max-width: 340px;
+            margin-bottom: 48px;
+            animation: fade-up 0.5s 0.4s both;
+        }
+
+        .logo-tagline strong {
+            color: var(--blue);
+            font-weight: 700;
+        }
+
+        /* feature list */
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            animation: fade-up 0.5s 0.5s both;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .feature-icon {
+            width: 40px; height: 40px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,53,128,0.06);
+        }
+
+        .feature-text strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .feature-text span {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        /* decorative card stack behind right panel */
+        .left-deco {
+            position: absolute;
+            bottom: 40px;
+            left: 60px;
+            display: flex;
+            gap: 10px;
+            animation: fade-up 0.5s 0.7s both;
+        }
+
+        .deco-pill {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            box-shadow: 0 2px 6px rgba(0,53,128,0.05);
+        }
+
+        .deco-pill.active {
+            background: var(--blue);
+            color: var(--white);
+            border-color: var(--blue);
+        }
+
+        /* floating mock cards */
+        .mock-cards {
+            margin-top: 40px;
+            position: relative;
+            animation: fade-up 0.5s 0.6s both;
+        }
+
+        .mock-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            box-shadow: 0 4px 16px rgba(0,53,128,0.07);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            margin-bottom: 10px;
+            transition: transform 0.2s;
+        }
+
+        .mock-card:hover {
+            transform: translateX(4px);
+        }
+
+        .mock-card-icon {
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .mock-card-icon.lost { background: #fef2f2; }
+        .mock-card-icon.found { background: #f0fdf4; }
+
+        .mock-card-text strong {
+            display: block;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .mock-card-text span {
+            font-size: 11px;
+            color: var(--text-light);
+        }
+
+        .mock-card-badge {
+            margin-left: auto;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 100px;
+            flex-shrink: 0;
+        }
+
+        .mock-card-badge.lost {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .mock-card-badge.found {
+            background: #f0fdf4;
+            color: #16a34a;
+        }
+
+        /* ---- RIGHT PANEL ---- */
+        .right-panel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            animation: slide-in-right 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes slide-in-right {
+            from { opacity: 0; transform: translateX(30px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ---- login card ---- */
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 44px 40px;
+            box-shadow:
+                0 4px 6px -1px rgba(0,53,128,0.04),
+                0 20px 40px -8px rgba(0,53,128,0.08),
+                0 0 0 1px rgba(255,255,255,0.8) inset;
+        }
+
+        .card-eyebrow {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--blue-mid);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .card-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            color: var(--text);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .card-desc {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        /* google button */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 15px 20px;
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-radius: 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,53,128,0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .google-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--blue-light), transparent);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .google-btn:hover {
+            border-color: var(--blue-mid);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,53,128,0.12);
+        }
+
+        .google-btn:hover::before {
+            opacity: 1;
+        }
+
+        .google-btn:active {
+            transform: translateY(0);
+        }
+
+        .google-btn img, .google-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* divider */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* info box */
+        .info-box {
+            background: var(--blue-light);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 13px;
+            color: var(--blue-mid);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .info-box strong {
+            display: block;
+            color: var(--blue);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        /* error */
+        #errorMsg {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 500;
+            display: none;
+        }
+
+        /* note */
+        .note {
+            margin-top: 28px;
+            font-size: 12px;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        /* stats row at bottom of card */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: 28px;
+        }
+
+        .stat-item {
+            background: var(--white);
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--blue);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ---- responsive ---- */
+        @media (max-width: 768px) {
+            .page {
+                grid-template-columns: 1fr;
+            }
+
+            .left-panel {
+                display: none;
+            }
+
+            .right-panel {
+                min-height: 100vh;
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg">
+        <div class="bg-grid"></div>
+        <div class="bg-shape bg-shape-1"></div>
+        <div class="bg-shape bg-shape-2"></div>
+        <div class="bg-shape bg-shape-3"></div>
+        <div class="bg-lines">
+            <div class="bg-line"></div>
+            <div class="bg-line"></div>
+            <div class="bg-line"></div>
+        </div>
+    </div>
+
+    <div class="page">
+
+        <!-- LEFT SIDE -->
+        <div class="left-panel">
+
+            <div class="vit-badge">
+                <span class="vit-badge-dot"></span>
+                VIT Vellore
             </div>
 
-            <button id="googleLoginBtn" class="google-btn">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="22">
-                Continue with Google
-            </button>
+            <div class="logo">SpotIt</div>
 
-            <div id="errorMsg" class="error-msg" style="display: none;"></div>
+            <p class="logo-tagline">
+                The <strong>digital lost & found</strong> platform built for the VIT community.
+            </p>
 
-            <p class="note">🔒 Secure login via @vitstudent.ac.in or @vit.ac.in</p>
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-text">
+                        <strong>Report Lost Items</strong>
+                        <span>Post what you lost with full details</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-text">
+                        <strong>Report Found Items</strong>
+                        <span>Help others reunite with their stuff</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-text">
+                        <strong>Verified Claiming</strong>
+                        <span>Answer questions to prove ownership</span>
+                    </div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">
+                        <strong>Real-time Database</strong>
+                        <span>Items visible to all VIT students instantly</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mock-cards">
+                <div class="mock-card">
+                    <div class="mock-card-icon lost">🔑</div>
+                    <div class="mock-card-text">
+                        <strong>Keys with blue keychain</strong>
+                        <span>📍 Library · 2 hours ago</span>
+                    </div>
+                    <span class="mock-card-badge lost">LOST</span>
+                </div>
+                <div class="mock-card">
+                    <div class="mock-card-icon found">🎧</div>
+                    <div class="mock-card-text">
+                        <strong>Black Sony Earphones</strong>
+                        <span>📍 SJT Block · Today</span>
+                    </div>
+                    <span class="mock-card-badge found">FOUND</span>
+                </div>
+                <div class="mock-card">
+                    <div class="mock-card-icon lost">💳</div>
+                    <div class="mock-card-text">
+                        <strong>VIT ID Card</strong>
+                        <span>📍 Cafeteria · Yesterday</span>
+                    </div>
+                    <span class="mock-card-badge lost">LOST</span>
+                </div>
+            </div>
+
+            <div class="left-deco">
+                <div class="deco-pill active">🟢 Live</div>
+                <div class="deco-pill">🔒 VIT Only</div>
+                <div class="deco-pill">✨ Free</div>
+            </div>
 
         </div>
+
+        <!-- RIGHT SIDE -->
+        <div class="right-panel">
+            <div class="login-card">
+
+                <p class="card-eyebrow">Student Portal</p>
+                <h1 class="card-title">Sign in to SpotIt</h1>
+                <p class="card-desc">Use your VIT Google account to access the platform and help the campus community.</p>
+
+                <button id="googleLoginBtn" class="google-btn">
+                    <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                </button>
+
+                <div id="errorMsg"></div>
+
+                <div class="or-divider">Access Info</div>
+
+                <div class="info-box">
+                    <strong>🔒 VIT accounts only</strong>
+                    Only @vitstudent.ac.in and @vit.ac.in email addresses are allowed to access SpotIt.
+                </div>
+
+                <div class="stats-strip">
+                    <div class="stat-item">
+                        <span class="stat-num">🔍</span>
+                        <div class="stat-label">Report Lost</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-num">✅</span>
+                        <div class="stat-label">Report Found</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-num">🤝</span>
+                        <div class="stat-label">Get Reunited</div>
+                    </div>
+                </div>
+
+                <p class="note">Built for VITians, by VITians 💙</p>
+
+            </div>
+        </div>
+
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
