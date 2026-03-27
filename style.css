@@ -133,6 +133,7 @@ body.login-page {
     font-size: 52px;
     font-weight: 800;
     background: linear-gradient(135deg, var(--vit-blue), var(--vit-light-blue));
+    background-clip: text; /* Add this standard line */
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -1px;
