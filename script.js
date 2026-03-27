@@ -24,42 +24,65 @@ function setUserInfo() {
     }
 }
 
-function getAllItems() {
-    const data = localStorage.getItem("vitLostFoundItems");
-    if (!data) return [];
-    
-    let items = JSON.parse(data);
-    let modified = false;
-    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
+async function getAllItems() {
+    try {
+        const snapshot = await db.collection("items").get();
+        let items = [];
+        snapshot.forEach(doc => {
+            items.push(doc.data());
+        });
 
-    items.forEach(item => {
-        if (item.status === "open" && (now - item.timestamp > thirtyDaysInMs)) {
-            item.status = "expired";
-            modified = true;
+        const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        for (let item of items) {
+            if (item.status === "open" && (now - item.timestamp > thirtyDaysInMs)) {
+                item.status = "expired";
+                await updateItemStatus(item.id, "expired");
+            }
         }
-    });
-
-    if (modified) {
-        localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
+        return items;
+    } catch (error) {
+        return [];
     }
-
-    return items;
 }
 
-function saveItem(item) {
-    const items = getAllItems();
-    items.push(item);
-    localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
+async function saveItem(item) {
+    try {
+        await db.collection("items").doc(item.id).set(item);
+    } catch (error) {}
 }
 
-function updateItemStatus(itemId, newStatus) {
-    const items = getAllItems();
-    const idx = items.findIndex(i => i.id === itemId);
-    if (idx !== -1) {
-        items[idx].status = newStatus;
-        localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
-    }
+async function updateItemStatus(itemId, newStatus) {
+    try {
+        await db.collection("items").doc(itemId).update({ status: newStatus });
+    } catch (error) {}
+}
+
+async function deleteItem(itemId) {
+    try {
+        await db.collection("items").doc(itemId).delete();
+    } catch (error) {}
+}
+
+async function getBannedUsers() {
+    try {
+        const doc = await db.collection("settings").doc("bannedUsers").get();
+        if (doc.exists) return doc.data().emails || [];
+        return [];
+    } catch (e) { return []; }
+}
+
+async function toggleBanUser(email) {
+    try {
+        let banned = await getBannedUsers();
+        if (banned.includes(email)) {
+            banned = banned.filter(e => e !== email);
+        } else {
+            banned.push(email);
+        }
+        await db.collection("settings").doc("bannedUsers").set({ emails: banned });
+    } catch (error) {}
 }
 
 function generateId() {

@@ -82,12 +82,9 @@
                 <button onclick="closeModal()" class="modal-close">✕</button>
             </div>
             <p class="modal-desc">Answer the questions below to prove this is your item. Answers are not case sensitive.</p>
-
             <div id="modalQuestions"></div>
-
             <div id="claimError" class="claim-error" style="display:none;">❌ Some answers are incorrect. Please try again.</div>
             <div id="claimSuccess" class="claim-success" style="display:none;"></div>
-
             <div id="claimActions">
                 <button onclick="submitClaim()" class="submit-btn" style="margin-top: 16px;">Submit Answers</button>
             </div>
@@ -96,12 +93,13 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
-
         const currentUser = JSON.parse(sessionStorage.getItem("vitUser"));
         let activeItem = null;
+        let allFetchedItems = [];
 
         function renderItems(items) {
             const grid = document.getElementById("itemsGrid");
@@ -164,13 +162,17 @@
             });
         }
 
-        function applyFilters() {
+        async function applyFilters() {
             const search   = document.getElementById("searchInput").value.toLowerCase();
             const type     = document.getElementById("filterType").value;
             const category = document.getElementById("filterCategory").value;
             const status   = document.getElementById("filterStatus").value;
 
-            let items = getAllItems().reverse();
+            if (allFetchedItems.length === 0) {
+                allFetchedItems = await getAllItems();
+            }
+            
+            let items = [...allFetchedItems].reverse();
             if (search)   items = items.filter(i => i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search));
             if (type)     items = items.filter(i => i.type === type);
             if (category) items = items.filter(i => i.category === category);
@@ -187,15 +189,15 @@
             applyFilters();
         }
 
-        function markResolved(itemId) {
+        async function markResolved(itemId) {
             if (!confirm("Mark this item as resolved?")) return;
-            updateItemStatus(itemId, "resolved");
+            await updateItemStatus(itemId, "resolved");
+            allFetchedItems = await getAllItems();
             applyFilters();
         }
 
         function openClaim(itemId) {
-            const items = getAllItems();
-            activeItem = items.find(i => i.id === itemId);
+            activeItem = allFetchedItems.find(i => i.id === itemId);
             if (!activeItem) return;
 
             const qContainer = document.getElementById("modalQuestions");
@@ -255,7 +257,6 @@
         });
 
         applyFilters();
-
     </script>
 </body>
 </html>

@@ -110,10 +110,10 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
-
         function handleLocationSelect() {
             const select = document.getElementById("itemLocationSelect");
             const customInput = document.getElementById("itemLocationCustom");
@@ -162,7 +162,7 @@
             return questions;
         }
 
-        function submitForm() {
+        async function submitForm() {
             const title           = document.getElementById("itemTitle").value.trim();
             const category        = document.getElementById("itemCategory").value;
             const date            = document.getElementById("itemDate").value;
@@ -203,7 +203,7 @@
                 timestamp: Date.now()
             };
 
-            saveItem(newItem);
+            await saveItem(newItem);
 
             document.getElementById("successMsg").style.display = "block";
             document.getElementById("itemTitle").value = "";
@@ -219,8 +219,6 @@
             questionCount = 0;
             window.scrollTo(0, 0);
         }
-
     </script>
-
 </body>
 </html>

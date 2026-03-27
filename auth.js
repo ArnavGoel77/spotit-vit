@@ -20,10 +20,10 @@ function isAdmin(email) {
 
 document.getElementById("googleLoginBtn").addEventListener("click", function () {
     auth.signInWithPopup(provider)
-        .then((result) => {
+        .then(async (result) => {
             const user = result.user;
-
-            const bannedUsers = JSON.parse(localStorage.getItem("vitBannedUsers") || "[]");
+            
+            const bannedUsers = await getBannedUsers();
             if (bannedUsers.includes(user.email)) {
                 auth.signOut();
                 showError("Your account has been suspended by an administrator.");
@@ -58,7 +58,6 @@ document.getElementById("googleLoginBtn").addEventListener("click", function () 
             if (error.code !== "auth/popup-closed-by-user") {
                 showError("Login failed. Please try again.");
             }
-            console.error(error);
         });
 });
 

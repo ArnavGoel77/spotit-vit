@@ -113,10 +113,10 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
-
         const currentUser = JSON.parse(sessionStorage.getItem("vitUser"));
         if (!currentUser || !currentUser.isAdmin) {
             window.location.href = "index.html";
@@ -132,8 +132,8 @@
             event.target.classList.add("active");
         }
 
-        function loadStats() {
-            const items = getAllItems();
+        async function loadStats() {
+            const items = await getAllItems();
             document.getElementById("totalLost").textContent = items.filter(i => i.type === "lost").length;
             document.getElementById("totalFound").textContent = items.filter(i => i.type === "found").length;
             document.getElementById("totalResolved").textContent = items.filter(i => i.status === "resolved").length;
@@ -146,11 +146,13 @@
             renderListings();
         }
 
-        function renderListings() {
+        async function renderListings() {
             const filterType   = document.getElementById("adminFilterType").value;
             const filterStatus = document.getElementById("adminFilterStatus").value;
 
-            let items = getAllItems().reverse();
+            let items = await getAllItems();
+            items = items.reverse();
+
             if (filterType)   items = items.filter(i => i.type === filterType);
             if (filterStatus) items = items.filter(i => i.status === filterStatus);
 
@@ -201,37 +203,29 @@
             });
         }
 
-        function adminResolve(itemId) {
+        async function adminResolve(itemId) {
             if (!confirm("Mark this item as resolved?")) return;
-            updateItemStatus(itemId, "resolved");
-            renderListings();
-            loadStats();
+            await updateItemStatus(itemId, "resolved");
+            await renderListings();
+            await loadStats();
         }
 
-        function adminDelete(itemId) {
+        async function adminDelete(itemId) {
             if (!confirm("Are you sure you want to delete this listing? This cannot be undone.")) return;
-            let items = getAllItems();
-            items = items.filter(i => i.id !== itemId);
-            localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
+            await deleteItem(itemId);
             const row = document.getElementById("row-" + itemId);
             if (row) row.remove();
-            loadStats();
+            await loadStats();
         }
 
-        function toggleBan(email) {
-            let bannedUsers = JSON.parse(localStorage.getItem("vitBannedUsers") || "[]");
-            if (bannedUsers.includes(email)) {
-                bannedUsers = bannedUsers.filter(e => e !== email);
-            } else {
-                bannedUsers.push(email);
-            }
-            localStorage.setItem("vitBannedUsers", JSON.stringify(bannedUsers));
-            renderUsers();
+        async function toggleBan(email) {
+            await toggleBanUser(email);
+            await renderUsers();
         }
 
-        function renderUsers() {
-            const items = getAllItems();
-            const bannedUsers = JSON.parse(localStorage.getItem("vitBannedUsers") || "[]");
+        async function renderUsers() {
+            const items = await getAllItems();
+            const bannedUsers = await getBannedUsers();
             const usersMap = {};
             
             items.forEach(item => {
@@ -269,10 +263,13 @@
             });
         }
 
-        loadStats();
-        renderListings();
-        renderUsers();
+        async function initAdmin() {
+            await loadStats();
+            await renderListings();
+            await renderUsers();
+        }
 
+        initAdmin();
     </script>
 </body>
 </html>

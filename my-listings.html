@@ -77,12 +77,12 @@
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
-
         const currentUser = JSON.parse(sessionStorage.getItem("vitUser"));
-        let activeItem = null;
+        let allFetchedItems = [];
 
         function renderItems(items) {
             const grid = document.getElementById("itemsGrid");
@@ -96,27 +96,17 @@
             grid.innerHTML = "";
 
             items.forEach(item => {
-                const isOwner = currentUser && currentUser.email === item.postedBy;
                 const desc = item.description.length > 90
                     ? item.description.substring(0, 90) + "..."
                     : item.description;
 
                 let actionArea = "";
-                if (item.type === "found" && !isOwner && item.status === "open") {
-                    if (item.questions && item.questions.length > 0) {
-                        actionArea = `<button onclick="openClaim('${item.id}')" class="claim-btn">🔐 Claim this item</button>`;
-                    } else {
-                        actionArea = `<div class="contact-info">📞 Contact: ${item.contact}</div>
-                                      <div class="contact-info">📦 Item is at: ${item.currentLocation}</div>`;
-                    }
-                } else if (item.type === "found" && isOwner) {
+                if (item.type === "found") {
                     actionArea = `<div class="contact-info">📞 Your contact: ${item.contact}</div>
                                   <div class="contact-info">📦 Item is at: ${item.currentLocation}</div>`;
-                } else if (item.type === "lost" && item.status === "open") {
-                    actionArea = `<div class="contact-info">📞 Contact: ${item.contact}</div>`;
                 }
 
-                const resolveBtn = isOwner && item.status === "open"
+                const resolveBtn = item.status === "open"
                     ? `<button onclick="markResolved('${item.id}')" class="resolve-btn">✅ Mark as Resolved</button>`
                     : "";
 
@@ -145,13 +135,17 @@
             });
         }
 
-        function applyFilters() {
+        async function applyFilters() {
             const search   = document.getElementById("searchInput").value.toLowerCase();
             const type     = document.getElementById("filterType").value;
             const category = document.getElementById("filterCategory").value;
             const status   = document.getElementById("filterStatus").value;
 
-            let items = getAllItems().reverse().filter(i => i.postedBy === currentUser.email);
+            if (allFetchedItems.length === 0) {
+                allFetchedItems = await getAllItems();
+            }
+
+            let items = [...allFetchedItems].reverse().filter(i => i.postedBy === currentUser.email);
 
             if (search)   items = items.filter(i => i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search));
             if (type)     items = items.filter(i => i.type === type);
@@ -169,14 +163,14 @@
             applyFilters();
         }
 
-        function markResolved(itemId) {
+        async function markResolved(itemId) {
             if (!confirm("Mark this item as resolved?")) return;
-            updateItemStatus(itemId, "resolved");
+            await updateItemStatus(itemId, "resolved");
+            allFetchedItems = await getAllItems();
             applyFilters();
         }
 
         applyFilters();
-
     </script>
 </body>
 </html>

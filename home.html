@@ -63,40 +63,41 @@
             <a href="listings.html">View All →</a>
         </div>
 
-        <div id="recentItems" class="items-grid">
-
-        </div>
+        <div id="recentItems" class="items-grid"></div>
 
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <script>
+        async function initHome() {
+            const user = JSON.parse(sessionStorage.getItem("vitUser"));
+            if (user) {
+                const firstName = user.name.split(" ")[0];
+                document.getElementById("welcomeMsg").textContent = "Welcome back, " + firstName + "! 👋";
+            }
 
-        const user = JSON.parse(sessionStorage.getItem("vitUser"));
-        if (user) {
-            const firstName = user.name.split(" ")[0];
-            document.getElementById("welcomeMsg").textContent = "Welcome back, " + firstName + "! 👋";
+            const allItems = await getAllItems();
+            document.getElementById("lostCount").textContent = allItems.filter(i => i.type === "lost").length;
+            document.getElementById("foundCount").textContent = allItems.filter(i => i.type === "found").length;
+            document.getElementById("resolvedCount").textContent = allItems.filter(i => i.status === "resolved").length;
+
+            const recent = [...allItems].reverse().slice(0, 6);
+            const grid = document.getElementById("recentItems");
+
+            if (recent.length === 0) {
+                grid.innerHTML = '<p class="no-items">No items posted yet. Be the first one!</p>';
+            } else {
+                recent.forEach(item => {
+                    grid.innerHTML += buildItemCard(item);
+                });
+            }
         }
 
-        const allItems = getAllItems();
-        document.getElementById("lostCount").textContent = allItems.filter(i => i.type === "lost").length;
-        document.getElementById("foundCount").textContent = allItems.filter(i => i.type === "found").length;
-        document.getElementById("resolvedCount").textContent = allItems.filter(i => i.status === "resolved").length;
-
-        const recent = [...allItems].reverse().slice(0, 6);
-        const grid = document.getElementById("recentItems");
-
-        if (recent.length === 0) {
-            grid.innerHTML = '<p class="no-items">No items posted yet. Be the first one!</p>';
-        } else {
-            recent.forEach(item => {
-                grid.innerHTML += buildItemCard(item);
-            });
-        }
-
+        initHome();
     </script>
 
 </body>
