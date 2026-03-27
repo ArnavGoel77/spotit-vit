@@ -3,14 +3,12 @@ function checkAuth() {
     const currentPage = window.location.pathname;
 
     if (!user) {
-        
         if (!currentPage.includes("index.html") && currentPage !== "/") {
             window.location.href = "index.html";
         }
         return null;
     }
 
-    
     if (currentPage.includes("index.html") || currentPage === "/") {
         const parsedUser = JSON.parse(user);
         window.location.href = parsedUser.isAdmin ? "admin.html" : "home.html";
@@ -117,6 +115,25 @@ function buildItemCard(item) {
         ? item.description.substring(0, 90) + "..."
         : item.description;
 
+    const currentUser = JSON.parse(sessionStorage.getItem("vitUser"));
+    const isOwner = currentUser && currentUser.email === item.postedBy;
+    let actionArea = "";
+
+    // Security Patch: Hide contact info on the Home page if questions exist
+    if (item.type === "found" && !isOwner && item.status === "open") {
+        if (item.questions && item.questions.length > 0) {
+            actionArea = `<a href="listings.html"><button class="claim-btn" style="width:100%; margin-top:10px;">🔐 Go to 'View All Items' to claim</button></a>`;
+        } else {
+            actionArea = `<div class="contact-info">📞 Contact: ${item.contact}</div>
+                          <div class="contact-info">📦 Item is at: ${item.currentLocation || "N/A"}</div>`;
+        }
+    } else if (item.type === "found" && isOwner) {
+        actionArea = `<div class="contact-info">📞 Your contact: ${item.contact}</div>
+                      <div class="contact-info">📦 Item is at: ${item.currentLocation || "N/A"}</div>`;
+    } else if (item.type === "lost" && item.status === "open") {
+        actionArea = `<div class="contact-info">📞 Contact: ${item.contact}</div>`;
+    }
+
     return `
         <div class="item-card">
             <div class="card-top ${item.type}">
@@ -134,7 +151,7 @@ function buildItemCard(item) {
                     <span class="cat-tag">${item.category}</span>
                     <span class="posted-by">by ${item.postedByName.split(" ")[0]}</span>
                 </div>
-                ${item.status === "open" ? `<div class="contact-info">📞 Contact: ${item.contact}</div>` : ""}
+                ${actionArea}
             </div>
         </div>
     `;
