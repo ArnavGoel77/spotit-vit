@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - SpotIt</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <nav class="navbar">
@@ -52,16 +54,21 @@
         </div>
 
         <div id="tab-listings" class="admin-section active">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                 <h3 style="font-size:18px; font-weight:600;">All Listings</h3>
                 <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <input type="text" id="adminSearchItem" placeholder="Search items or emails..." oninput="currentPage=1; renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
-                    <select id="adminFilterType" onchange="currentPage=1; renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                    <input type="text" id="adminSearchItem" placeholder="Search items or emails..."
+                        oninput="currentPage=1; renderListings()"
+                        style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                    <select id="adminFilterType" onchange="currentPage=1; renderListings()"
+                        style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
                         <option value="">All Types</option>
                         <option value="lost">Lost</option>
                         <option value="found">Found</option>
                     </select>
-                    <select id="adminFilterStatus" onchange="currentPage=1; renderListings()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                    <select id="adminFilterStatus" onchange="currentPage=1; renderListings()"
+                        style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
                         <option value="">All Status</option>
                         <option value="open">Open</option>
                         <option value="resolved">Resolved</option>
@@ -86,7 +93,7 @@
                 <tbody id="listingsTableBody">
                 </tbody>
             </table>
-            
+
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
                 <button onclick="changePage(-1)" id="prevPageBtn" class="filter-btn secondary">← Previous</button>
                 <span id="pageIndicator" style="font-size:13px; font-weight:600;">Page 1</span>
@@ -95,9 +102,11 @@
         </div>
 
         <div id="tab-users" class="admin-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
                 <h3 style="font-size:18px; font-weight:600;">Registered Users</h3>
-                <input type="text" id="adminSearchUser" placeholder="Search name or email..." oninput="renderUsers()" style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
+                <input type="text" id="adminSearchUser" placeholder="Search name or email..." oninput="renderUsers()"
+                    style="padding:8px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; outline:none;">
             </div>
             <table class="admin-table">
                 <thead>
@@ -152,21 +161,21 @@
         }
 
         async function renderListings() {
-            const filterType   = document.getElementById("adminFilterType").value;
+            const filterType = document.getElementById("adminFilterType").value;
             const filterStatus = document.getElementById("adminFilterStatus").value;
-            const searchQuery  = document.getElementById("adminSearchItem") ? document.getElementById("adminSearchItem").value.toLowerCase() : "";
+            const searchQuery = document.getElementById("adminSearchItem") ? document.getElementById("adminSearchItem").value.toLowerCase() : "";
 
             let items = await getAllItems();
             items = items.reverse();
 
             if (searchQuery) {
-                items = items.filter(i => 
-                    i.title.toLowerCase().includes(searchQuery) || 
+                items = items.filter(i =>
+                    i.title.toLowerCase().includes(searchQuery) ||
                     i.description.toLowerCase().includes(searchQuery) ||
                     i.postedBy.toLowerCase().includes(searchQuery)
                 );
             }
-            if (filterType)   items = items.filter(i => i.type === filterType);
+            if (filterType) items = items.filter(i => i.type === filterType);
             if (filterStatus) items = items.filter(i => i.status === filterStatus);
 
             const totalPages = Math.ceil(items.length / itemsPerPage) || 1;
@@ -174,7 +183,7 @@
             if (currentPage < 1) currentPage = 1;
 
             const paginatedItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-            
+
             document.getElementById("pageIndicator").textContent = `Page ${currentPage} of ${totalPages}`;
             document.getElementById("prevPageBtn").disabled = currentPage === 1;
             document.getElementById("prevPageBtn").style.opacity = currentPage === 1 ? "0.5" : "1";
@@ -240,9 +249,19 @@
             const items = await getAllItems();
             const bannedUsers = await getBannedUsers();
             const searchQuery = document.getElementById("adminSearchUser") ? document.getElementById("adminSearchUser").value.toLowerCase() : "";
-            const usersMap = {};
-            
+
+            // 1. Get ALL registered users from the new database
+            const usersSnapshot = await db.collection("users").get();
+            let usersMap = {};
+
+            usersSnapshot.forEach(doc => {
+                const u = doc.data();
+                usersMap[u.email] = { name: u.name, email: u.email, totalPosted: 0, totalResolved: 0 };
+            });
+
+            // 2. Count their items
             items.forEach(item => {
+                // Fallback just in case an older user posted an item before we added the new tracking
                 if (!usersMap[item.postedBy]) {
                     usersMap[item.postedBy] = { name: item.postedByName, email: item.postedBy, totalPosted: 0, totalResolved: 0 };
                 }
@@ -253,8 +272,8 @@
             let users = Object.values(usersMap);
 
             if (searchQuery) {
-                users = users.filter(u => 
-                    u.name.toLowerCase().includes(searchQuery) || 
+                users = users.filter(u =>
+                    u.name.toLowerCase().includes(searchQuery) ||
                     u.email.toLowerCase().includes(searchQuery)
                 );
             }
@@ -269,19 +288,19 @@
             tbody.innerHTML = "";
             users.forEach(user => {
                 const isBanned = bannedUsers.includes(user.email);
-                const banButtonHTML = user.email === currentUser.email 
-                    ? `<span style="font-size:11px; color:var(--text-light);">Admin</span>` 
+                const banButtonHTML = user.email === currentUser.email
+                    ? `<span style="font-size:11px; color:var(--text-light);">Admin</span>`
                     : `<button class="${isBanned ? 'admin-resolve-btn' : 'delete-btn'}" onclick="toggleBan('${user.email}')">${isBanned ? 'Unban User' : 'Ban User'}</button>`;
 
                 tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${user.name}</strong> ${isBanned ? '🛑' : ''}</td>
-                        <td>${user.email}</td>
-                        <td>${user.totalPosted}</td>
-                        <td>${user.totalResolved}</td>
-                        <td>${banButtonHTML}</td>
-                    </tr>
-                `;
+            <tr>
+                <td><strong>${user.name}</strong> ${isBanned ? '🛑' : ''}</td>
+                <td>${user.email}</td>
+                <td>${user.totalPosted}</td>
+                <td>${user.totalResolved}</td>
+                <td>${banButtonHTML}</td>
+            </tr>
+        `;
             });
         }
 
@@ -294,4 +313,5 @@
         initAdmin();
     </script>
 </body>
+
 </html>

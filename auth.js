@@ -48,7 +48,16 @@ document.getElementById("googleLoginBtn").addEventListener("click", function () 
                     photo: user.photoURL,
                     isAdmin: false
                 }));
-                window.location.href = "home.html";
+
+                // NEW: Save every valid user to the Firestore database
+                db.collection("users").doc(user.email).set({
+                    name: user.displayName,
+                    email: user.email,
+                    lastLogin: new Date().toISOString()
+                }, { merge: true }).then(() => {
+                    window.location.href = "home.html";
+                });
+
             } else {
                 auth.signOut();
                 showError("Access denied! Only @vitstudent.ac.in and @vit.ac.in emails are allowed.");
