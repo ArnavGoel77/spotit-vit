@@ -84,6 +84,12 @@
                 <tbody id="listingsTableBody">
                 </tbody>
             </table>
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+                <button onclick="changePage(-1)" id="prevPageBtn" class="filter-btn secondary">← Previous</button>
+                <span id="pageIndicator" style="font-size:13px; font-weight:600;">Page 1</span>
+                <button onclick="changePage(1)" id="nextPageBtn" class="filter-btn secondary">Next →</button>
+            </div>
         </div>
 
         <div id="tab-users" class="admin-section">
@@ -95,6 +101,7 @@
                         <th>Email</th>
                         <th>Items Posted</th>
                         <th>Items Resolved</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="usersTableBody">
@@ -115,26 +122,29 @@
             window.location.href = "index.html";
         }
 
+        let currentPage = 1;
+        const itemsPerPage = 8;
 
         function switchTab(tabName) {
             document.querySelectorAll(".admin-section").forEach(s => s.classList.remove("active"));
             document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
-
             document.getElementById("tab-" + tabName).classList.add("active");
             event.target.classList.add("active");
         }
-
 
         function loadStats() {
             const items = getAllItems();
             document.getElementById("totalLost").textContent = items.filter(i => i.type === "lost").length;
             document.getElementById("totalFound").textContent = items.filter(i => i.type === "found").length;
             document.getElementById("totalResolved").textContent = items.filter(i => i.status === "resolved").length;
-
             const uniqueUsers = [...new Set(items.map(i => i.postedBy))];
             document.getElementById("totalUsers").textContent = uniqueUsers.length;
         }
 
+        function changePage(direction) {
+            currentPage += direction;
+            renderListings();
+        }
 
         function renderListings() {
             const filterType   = document.getElementById("adminFilterType").value;
@@ -144,28 +154,36 @@
             if (filterType)   items = items.filter(i => i.type === filterType);
             if (filterStatus) items = items.filter(i => i.status === filterStatus);
 
+            const totalPages = Math.ceil(items.length / itemsPerPage) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const paginatedItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            
+            document.getElementById("pageIndicator").textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById("prevPageBtn").disabled = currentPage === 1;
+            document.getElementById("prevPageBtn").style.opacity = currentPage === 1 ? "0.5" : "1";
+            document.getElementById("nextPageBtn").disabled = currentPage === totalPages;
+            document.getElementById("nextPageBtn").style.opacity = currentPage === totalPages ? "0.5" : "1";
+
             const tbody = document.getElementById("listingsTableBody");
 
-            if (items.length === 0) {
+            if (paginatedItems.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="no-data">No listings found.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = "";
-
-            items.forEach(item => {
+            paginatedItems.forEach(item => {
                 const resolveBtn = item.status === "open"
                     ? `<button class="admin-resolve-btn" onclick="adminResolve('${item.id}')">✅ Resolve</button>`
-                    : `<span style="color:var(--text-light); font-size:12px;">Resolved</span> `;
+                    : `<span style="color:var(--text-light); font-size:12px; margin-right:8px;">${item.status === 'expired' ? 'Expired' : 'Resolved'}</span> `;
 
                 tbody.innerHTML += `
                     <tr id="row-${item.id}">
                         <td><strong>${item.title}</strong></td>
                         <td>
-                            <span style="
-                                background: ${item.type === 'lost' ? '#fdecea' : '#e8f8ee'};
-                                color: ${item.type === 'lost' ? 'var(--lost-color)' : 'var(--found-color)'};
-                                padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;">
+                            <span style="background: ${item.type === 'lost' ? '#fdecea' : '#e8f8ee'}; color: ${item.type === 'lost' ? 'var(--lost-color)' : 'var(--found-color)'}; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600;">
                                 ${item.type.toUpperCase()}
                             </span>
                         </td>
@@ -173,9 +191,7 @@
                         <td>${item.location}</td>
                         <td>${item.postedByName.split(" ")[0]}<br><span style="color:var(--text-light);font-size:11px;">${item.postedBy}</span></td>
                         <td>${formatDate(item.date)}</td>
-                        <td>
-                            <span class="status-badge ${item.status}">${item.status.toUpperCase()}</span>
-                        </td>
+                        <td><span class="status-badge ${item.status}">${item.status.toUpperCase()}</span></td>
                         <td>
                             ${resolveBtn}
                             <button class="delete-btn" onclick="adminDelete('${item.id}')">🗑 Delete</button>
@@ -194,53 +210,60 @@
 
         function adminDelete(itemId) {
             if (!confirm("Are you sure you want to delete this listing? This cannot be undone.")) return;
-
             let items = getAllItems();
             items = items.filter(i => i.id !== itemId);
             localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
-
             const row = document.getElementById("row-" + itemId);
             if (row) row.remove();
-
             loadStats();
         }
 
+        function toggleBan(email) {
+            let bannedUsers = JSON.parse(localStorage.getItem("vitBannedUsers") || "[]");
+            if (bannedUsers.includes(email)) {
+                bannedUsers = bannedUsers.filter(e => e !== email);
+            } else {
+                bannedUsers.push(email);
+            }
+            localStorage.setItem("vitBannedUsers", JSON.stringify(bannedUsers));
+            renderUsers();
+        }
 
         function renderUsers() {
             const items = getAllItems();
-
+            const bannedUsers = JSON.parse(localStorage.getItem("vitBannedUsers") || "[]");
             const usersMap = {};
+            
             items.forEach(item => {
                 if (!usersMap[item.postedBy]) {
-                    usersMap[item.postedBy] = {
-                        name: item.postedByName,
-                        email: item.postedBy,
-                        totalPosted: 0,
-                        totalResolved: 0
-                    };
+                    usersMap[item.postedBy] = { name: item.postedByName, email: item.postedBy, totalPosted: 0, totalResolved: 0 };
                 }
                 usersMap[item.postedBy].totalPosted++;
-                if (item.status === "resolved") {
-                    usersMap[item.postedBy].totalResolved++;
-                }
+                if (item.status === "resolved") usersMap[item.postedBy].totalResolved++;
             });
 
             const users = Object.values(usersMap);
             const tbody = document.getElementById("usersTableBody");
 
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="no-data">No users have posted anything yet.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="no-data">No users have posted anything yet.</td></tr>';
                 return;
             }
 
             tbody.innerHTML = "";
             users.forEach(user => {
+                const isBanned = bannedUsers.includes(user.email);
+                const banButtonHTML = user.email === currentUser.email 
+                    ? `<span style="font-size:11px; color:var(--text-light);">Admin</span>` 
+                    : `<button class="${isBanned ? 'admin-resolve-btn' : 'delete-btn'}" onclick="toggleBan('${user.email}')">${isBanned ? 'Unban User' : 'Ban User'}</button>`;
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><strong>${user.name}</strong></td>
+                        <td><strong>${user.name}</strong> ${isBanned ? '🛑' : ''}</td>
                         <td>${user.email}</td>
                         <td>${user.totalPosted}</td>
                         <td>${user.totalResolved}</td>
+                        <td>${banButtonHTML}</td>
                     </tr>
                 `;
             });
@@ -251,6 +274,5 @@
         renderUsers();
 
     </script>
-
 </body>
 </html>

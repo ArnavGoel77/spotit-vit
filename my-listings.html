@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Items - SpotIt</title>
+    <title>My Listings - SpotIt</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,8 +14,8 @@
             <a href="home.html">Home</a>
             <a href="report-lost.html">Report Lost</a>
             <a href="report-found.html">Report Found</a>
-            <a href="listings.html" class="active">View All Items</a>
-            <a href="my-listings.html">My Listings</a>
+            <a href="listings.html">View All Items</a>
+            <a href="my-listings.html" class="active">My Listings</a>
         </div>
         <div class="nav-user">
             <span id="userName"></span>
@@ -26,8 +26,8 @@
     <div class="container">
 
         <div class="welcome-section">
-            <h2>All Listings</h2>
-            <p>Browse all lost and found items posted by VIT students.</p>
+            <h2>My Listings</h2>
+            <p>Manage the lost and found items you have reported.</p>
         </div>
 
         <div class="filter-bar">
@@ -73,25 +73,6 @@
         <p id="resultsInfo" class="results-info"></p>
         <div id="itemsGrid" class="items-grid"></div>
 
-    </div>
-
-    <div id="claimModal" class="modal-overlay" style="display:none;">
-        <div class="modal-box">
-            <div class="modal-header">
-                <h3>🔐 Verify Your Identity</h3>
-                <button onclick="closeModal()" class="modal-close">✕</button>
-            </div>
-            <p class="modal-desc">Answer the questions below to prove this is your item. Answers are not case sensitive.</p>
-
-            <div id="modalQuestions"></div>
-
-            <div id="claimError" class="claim-error" style="display:none;">❌ Some answers are incorrect. Please try again.</div>
-            <div id="claimSuccess" class="claim-success" style="display:none;"></div>
-
-            <div id="claimActions">
-                <button onclick="submitClaim()" class="submit-btn" style="margin-top: 16px;">Submit Answers</button>
-            </div>
-        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -170,7 +151,8 @@
             const category = document.getElementById("filterCategory").value;
             const status   = document.getElementById("filterStatus").value;
 
-            let items = getAllItems().reverse();
+            let items = getAllItems().reverse().filter(i => i.postedBy === currentUser.email);
+
             if (search)   items = items.filter(i => i.title.toLowerCase().includes(search) || i.description.toLowerCase().includes(search));
             if (type)     items = items.filter(i => i.type === type);
             if (category) items = items.filter(i => i.category === category);
@@ -192,67 +174,6 @@
             updateItemStatus(itemId, "resolved");
             applyFilters();
         }
-
-        function openClaim(itemId) {
-            const items = getAllItems();
-            activeItem = items.find(i => i.id === itemId);
-            if (!activeItem) return;
-
-            const qContainer = document.getElementById("modalQuestions");
-            qContainer.innerHTML = "";
-            document.getElementById("claimError").style.display = "none";
-            document.getElementById("claimSuccess").style.display = "none";
-            document.getElementById("claimActions").style.display = "block";
-
-            activeItem.questions.forEach((q, idx) => {
-                qContainer.innerHTML += `
-                    <div class="modal-question">
-                        <label>Q${idx + 1}: ${q.question}</label>
-                        <input type="text" id="claim-ans-${idx}" placeholder="Your answer..." />
-                    </div>
-                `;
-            });
-
-            document.getElementById("claimModal").style.display = "flex";
-        }
-
-        function closeModal() {
-            document.getElementById("claimModal").style.display = "none";
-            activeItem = null;
-        }
-
-        function submitClaim() {
-            if (!activeItem) return;
-
-            let allCorrect = true;
-
-            activeItem.questions.forEach((q, idx) => {
-                const userAnswer = document.getElementById("claim-ans-" + idx).value.trim().toLowerCase();
-                if (userAnswer !== q.answer) {
-                    allCorrect = false;
-                }
-            });
-
-            if (!allCorrect) {
-                document.getElementById("claimError").style.display = "block";
-                document.getElementById("claimSuccess").style.display = "none";
-                return;
-            }
-
-            document.getElementById("claimError").style.display = "none";
-            document.getElementById("claimActions").style.display = "none";
-            document.getElementById("claimSuccess").style.display = "block";
-            document.getElementById("claimSuccess").innerHTML = `
-                ✅ Verified! Here are the contact details:<br><br>
-                <strong>📞 Contact:</strong> ${activeItem.contact}<br>
-                <strong>📦 Item is at:</strong> ${activeItem.currentLocation}<br>
-                <strong>👤 Posted by:</strong> ${activeItem.postedByName}
-            `;
-        }
-
-        document.getElementById("claimModal").addEventListener("click", function(e) {
-            if (e.target === this) closeModal();
-        });
 
         applyFilters();
 

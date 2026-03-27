@@ -24,10 +24,27 @@ function setUserInfo() {
     }
 }
 
-
 function getAllItems() {
     const data = localStorage.getItem("vitLostFoundItems");
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    
+    let items = JSON.parse(data);
+    let modified = false;
+    const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+
+    items.forEach(item => {
+        if (item.status === "open" && (now - item.timestamp > thirtyDaysInMs)) {
+            item.status = "expired";
+            modified = true;
+        }
+    });
+
+    if (modified) {
+        localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
+    }
+
+    return items;
 }
 
 function saveItem(item) {
@@ -44,7 +61,6 @@ function updateItemStatus(itemId, newStatus) {
         localStorage.setItem("vitLostFoundItems", JSON.stringify(items));
     }
 }
-
 
 function generateId() {
     return "item_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
