@@ -3,7 +3,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 
 const allowedDomains = ["vitstudent.ac.in", "vit.ac.in"];
 
-const ADMIN_EMAIL = ["goelarnav06@gmail.com","mehergandhok@gmail.com","athishraj04@gmail.com"];
+const ADMIN_EMAILS = ["goelarnav06@gmail.com","mehergandhok@gmail.com","athishraj04@gmail.com"];
 
 function isVITemail(email) {
     const domain = email.split("@")[1];
