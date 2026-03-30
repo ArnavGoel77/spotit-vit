@@ -49,7 +49,6 @@ document.getElementById("googleLoginBtn").addEventListener("click", function () 
                     isAdmin: false
                 }));
 
-                // NEW: Save every valid user to the Firestore database
                 db.collection("users").doc(user.email).set({
                     name: user.displayName,
                     email: user.email,

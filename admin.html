@@ -250,7 +250,6 @@
             const bannedUsers = await getBannedUsers();
             const searchQuery = document.getElementById("adminSearchUser") ? document.getElementById("adminSearchUser").value.toLowerCase() : "";
 
-            // 1. Get ALL registered users from the new database
             const usersSnapshot = await db.collection("users").get();
             let usersMap = {};
 
@@ -259,9 +258,7 @@
                 usersMap[u.email] = { name: u.name, email: u.email, totalPosted: 0, totalResolved: 0 };
             });
 
-            // 2. Count their items
             items.forEach(item => {
-                // Fallback just in case an older user posted an item before we added the new tracking
                 if (!usersMap[item.postedBy]) {
                     usersMap[item.postedBy] = { name: item.postedByName, email: item.postedBy, totalPosted: 0, totalResolved: 0 };
                 }
