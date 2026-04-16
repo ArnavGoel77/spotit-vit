@@ -6,7 +6,8 @@ const allowedDomains = ["vitstudent.ac.in", "vit.ac.in"];
 const ADMIN_EMAILS = [
     "goelarnav06@gmail.com",
     "mehergandhok@gmail.com",
-    "athishraj04@gmail.com"
+    "athishraj04@gmail.com",
+    "takatosaijyo27@gmail.com"
 ];
 
 function isVITemail(email) {
